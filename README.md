@@ -51,7 +51,7 @@ sh install.sh --check --interface br-home
 sh install.sh --interface br-home
 ```
 
-`br-home` 是示例，应替换成真实的 **LAN 三层接口**；不要填 WAN、PPPoE、IPTV 桥或 IPTV VLAN 接口。可先用 `ip link show` 和固件网络页面核对。
+`br-home` 是示例，应替换成真实的 **LAN 三层接口**；不要填 WAN、PPPoE 接口。可先用 `ip link show` 和固件网络页面核对。
 
 安装器会检查条件、保存一份原始 DNS 配置、写入自有文件、添加独立 DNS 标记段、创建自有规则表、启用自启动并重启 dnsmasq。**DNS 服务会短暂重启**。安装失败会尝试恢复刚才的 DNS 配置并移除本次服务；不修改网络接口、VLAN、现有 firewall4 配置或 Open-Box 配置。
 
