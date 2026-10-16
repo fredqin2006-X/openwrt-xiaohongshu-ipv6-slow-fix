@@ -2,7 +2,7 @@
 
 为 OpenWrt / iStoreOS 提供小红书 IPv4 优先的轻量服务。针对“小红书部分 IPv6 CDN 连接卡住，图片、头像长时间留白，而 IPv4 正常”的场景，让识别到的小红书网页连接尽快回退到 IPv4。
 
-**不关闭全局 IPv6，不要求流量进入 Open-Box / sing-box 内核。** 使用路由器本机的 dnsmasq、nftables、tcpdump、Lua 和 procd；没有 Docker、云端接口或账号配置。
+**不关闭全局 IPv6，不要求流量进入代理软件内核。** 使用路由器本机的 dnsmasq、nftables、tcpdump、Lua 和 procd；没有 Docker、云端接口或账号配置。
 
 当前版本：`0.1.0`。这是命令行安装的实验性服务，尚未打包为 LuCI 页面、IPK 或 APK 安装包。基本机制来自实际家庭网络排障；新整理的通用安装器仍需要更多不同固件的验证。
 
