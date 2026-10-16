@@ -1,4 +1,4 @@
-# OpenWrt XHS IPv4
+# 小红书 IPv6 连接缓慢修复（OpenWrt / iStoreOS）
 
 为 OpenWrt / iStoreOS 提供小红书 IPv4 优先的轻量服务。针对“小红书部分 IPv6 CDN 连接卡住，图片、头像长时间留白，而 IPv4 正常”的场景，让识别到的小红书网页连接尽快回退到 IPv4。
 
@@ -25,11 +25,11 @@
 
 ## 安装
 
-在自己的电脑下载仓库 ZIP 并解压后，将整个目录上传到路由器，例如 `/tmp/openwrt-xhs-ipv4`；也可以在已安装 Git 的路由器上执行：
+在自己的电脑下载仓库 ZIP 并解压后，将整个目录上传到路由器，例如 `/tmp/openwrt-xiaohongshu-ipv6-slow-fix`；也可以在已安装 Git 的路由器上执行：
 
 ```sh
-git clone https://github.com/fredqin2006-X/openwrt-xhs-ipv4.git
-cd openwrt-xhs-ipv4
+git clone https://github.com/fredqin2006-X/openwrt-xiaohongshu-ipv6-slow-fix.git
+cd openwrt-xiaohongshu-ipv6-slow-fix
 ```
 
 先检查条件，检查模式不改系统配置、不开服务、不创建持久备份：
