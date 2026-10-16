@@ -1,0 +1,24 @@
+name: Check
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lua interpreter
+        run: sudo apt-get update && sudo apt-get install -y lua5.1
+      - name: Shell syntax
+        run: |
+          sh -n install.sh
+          sh -n uninstall.sh
+          sh -n files/etc/init.d/xhs-ipv4
+          for file in files/usr/libexec/xhs-ipv4-*; do
+            case "$file" in *.lua) continue;; esac
+            sh -n "$file"
+          done
+      - name: Synthetic packet tests
+        run: python3 tests/test_learner.py --lua lua5.1 -v

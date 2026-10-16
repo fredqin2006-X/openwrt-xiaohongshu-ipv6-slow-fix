@@ -1,0 +1,47 @@
+#!/bin/sh
+set -eu
+LAN_IFACE=br-lan
+[ ! -r /etc/xhs-ipv4/options ] || . /etc/xhs-ipv4/options
+render() {
+    case "$1" in ''|*[!a-zA-Z0-9_.:-]*) echo 'Invalid LAN interface' >&2; return 1;; esac
+    [ "${#1}" -le 15 ] || return 1
+    cat <<EOF
+add table inet xhs_ipv4
+add set inet xhs_ipv4 targets6 { type ipv6_addr; flags timeout; timeout 1h; gc-interval 1m; size 4096; }
+add chain inet xhs_ipv4 forward { type filter hook forward priority -10; policy accept; }
+add rule inet xhs_ipv4 forward iifname "$1" ip6 daddr @targets6 tcp dport { 80, 443 } counter reject with tcp reset comment "XHS IPv4 preference: LAN web TCP"
+add rule inet xhs_ipv4 forward iifname "$1" ip6 daddr @targets6 udp dport 443 counter reject with icmpv6 type port-unreachable comment "XHS IPv4 preference: LAN QUIC"
+EOF
+}
+case "${1:-status}" in
+render) render "${2:-$LAN_IFACE}" ;;
+ensure)
+    if ! nft list table inet xhs_ipv4 >/dev/null 2>&1; then
+        rules=$(render "$LAN_IFACE")
+        printf '%s\n' "$rules" | nft -f -
+        logger -t xhs-ipv4 'Restored LAN IPv6 web target table'
+    fi
+    ;;
+maintain)
+    next_refresh=0
+    while :; do
+        "$0" ensure
+        now=$(date +%s)
+        if [ "$now" -ge "$next_refresh" ]; then
+            while IFS= read -r domain; do
+                case "$domain" in ''|'#'*) continue;; esac
+                timeout 3 nslookup -type=AAAA "$domain" 127.0.0.1 >/dev/null 2>&1 || :
+            done < /etc/xhs-ipv4/hosts
+            next_refresh=$((now + 300))
+        fi
+        sleep 15
+    done
+    ;;
+status)
+    printf 'Version: '; cat /etc/xhs-ipv4/VERSION
+    printf 'LAN interface: %s\n' "$LAN_IFACE"
+    /etc/init.d/xhs-ipv4 status
+    nft list table inet xhs_ipv4
+    ;;
+*) echo 'Usage: xhs-ipv4-control {status|ensure|maintain|render [interface]}' >&2; exit 2;;
+esac

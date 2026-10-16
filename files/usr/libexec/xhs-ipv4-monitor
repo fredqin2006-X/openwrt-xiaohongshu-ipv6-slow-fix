@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+LAN_IFACE=br-lan
+. /etc/xhs-ipv4/options
+case "$LAN_IFACE" in ''|*[!a-zA-Z0-9_.:-]*) exit 1;; esac
+umask 077
+runtime=/var/run/xhs-ipv4
+mkdir -p "$runtime"
+chmod 700 "$runtime"
+fifo="$runtime/live.pcap"
+rm -f "$fifo"
+mkfifo "$fifo"
+capture_pid=
+learner_pid=
+cleanup() {
+    trap - EXIT TERM INT
+    [ -z "$capture_pid" ] || kill "$capture_pid" 2>/dev/null || :
+    [ -z "$learner_pid" ] || kill "$learner_pid" 2>/dev/null || :
+    rm -f "$fifo"
+}
+trap 'cleanup; exit 0' TERM INT
+trap cleanup EXIT
+tcpdump -n -p -U -i "$LAN_IFACE" -Q in -s 4096 -w "$fifo" 'ip6 and (tcp dst port 80 or tcp dst port 443)' &
+capture_pid=$!
+lua /usr/libexec/xhs-ipv4-learn.lua < "$fifo" &
+learner_pid=$!
+wait "$learner_pid"

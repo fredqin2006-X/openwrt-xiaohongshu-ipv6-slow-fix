@@ -1,0 +1,10 @@
+*.pcap
+*.pcapng
+*.tar.gz
+*.zip
+*.log
+*.pyc
+__pycache__/
+backups/
+.env
+.env.*

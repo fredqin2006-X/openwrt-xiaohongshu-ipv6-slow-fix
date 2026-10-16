@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+[ "$(id -u)" = 0 ] || { echo 'Run as root.' >&2; exit 1; }
+[ -r /etc/xhs-ipv4/VERSION ] || { echo 'No managed installation found; use the legacy rollback script for old manual deployments.' >&2; exit 1; }
+umask 077
+tmp=$(mktemp /tmp/xhs-ipv4-uninstall.XXXXXX)
+trap 'rm -f "$tmp"' EXIT
+awk '
+    /^# BEGIN XHS-IPV4$/ { if (inside || begins++) exit 2; inside=1; next }
+    /^# END XHS-IPV4$/ { if (!inside || ends++) exit 2; inside=0; next }
+    !inside { print }
+    END { if (inside || begins != ends) exit 2 }
+' /etc/dnsmasq.conf > "$tmp"
+dnsmasq --test --conf-file="$tmp"
+cat "$tmp" > /etc/dnsmasq.conf
+/etc/init.d/dnsmasq restart
+/etc/init.d/dnsmasq status
+/etc/init.d/xhs-ipv4 disable
+/etc/init.d/xhs-ipv4 stop
+nft delete table inet xhs_ipv4 2>/dev/null || :
+rm -f /etc/init.d/xhs-ipv4 /usr/libexec/xhs-ipv4-control /usr/libexec/xhs-ipv4-monitor /usr/libexec/xhs-ipv4-learn.lua /usr/libexec/xhs-ipv4-uninstall
+rm -f /etc/xhs-ipv4/domains /etc/xhs-ipv4/hosts /etc/xhs-ipv4/options /etc/xhs-ipv4/VERSION
+rmdir /etc/xhs-ipv4 2>/dev/null || :
+rmdir /var/run/xhs-ipv4 2>/dev/null || :
+echo 'Uninstalled. The original backup remains in /etc/xhs-ipv4-backup/.'
